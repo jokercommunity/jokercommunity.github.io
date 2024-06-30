@@ -77,96 +77,36 @@
             width: 100%;
             max-width: 500px;
         }
-        .modal {
-            display: none;
-            position: fixed;
-            z-index: 1;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
-            overflow: auto;
-            background-color: rgba(0, 0, 0, 0.8);
-            padding-top: 60px;
-        }
-        .modal-content {
-            background-color: #1e1e1e;
-            margin: 5% auto;
-            padding: 20px;
-            border: 1px solid #00FF00;
-            width: 80%;
-            max-width: 600px;
-            border-radius: 10px;
-        }
-        .close {
-            color: #00FF00;
-            float: right;
-            font-size: 28px;
-            font-weight: bold;
-        }
-        .close:hover,
-        .close:focus {
-            color: #fff;
-            text-decoration: none;
-            cursor: pointer;
-        }
-        .modal-btn {
-            display: block;
-            width: 100%;
-            text-align: center;
-            margin: 20px 0;
-        }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>Your Public IP Information</h1>
 
+        <div class="input-container">
+            <input type="text" id="apiKeyInput" placeholder="Enter your Abstract API Key">
+            <button id="fetchWithApiKeyBtn" class="btn">Fetch IP Info with API Key</button>
+        </div>
+
         <div class="section">
             <h2>Data in Plain Text</h2>
             <div id="plainText" class="info"></div>
-            <button id="copyPlainBtn" class="btn">Copy Plain Text</button>
-            <button id="downloadPlainBtn" class="btn">Download Plain Text</button>
+            <button id="copyPlainBtn" class="btn" disabled>Copy Plain Text</button>
+            <button id="downloadPlainBtn" class="btn" disabled>Download Plain Text</button>
         </div>
 
         <div class="section">
             <h2>Data in JSON Format</h2>
             <div id="jsonText" class="info"></div>
-            <button id="copyJsonBtn" class="btn">Copy JSON</button>
-            <button id="downloadJsonBtn" class="btn">Download JSON</button>
+            <button id="copyJsonBtn" class="btn" disabled>Copy JSON</button>
+            <button id="downloadJsonBtn" class="btn" disabled>Download JSON</button>
         </div>
 
         <div class="section">
             <h2>Headers</h2>
             <pre id="headers" class="info"></pre>
-            <button id="copyHeadersBtn" class="btn">Copy Headers</button>
-            <button id="downloadHeadersBtn" class="btn">Download Headers</button>
-        </div>
-
-        <div class="modal-btn">
-            <button id="openModalBtn" class="btn">Open Abstract API Section</button>
-        </div>
-    </div>
-
-    <div id="apiModal" class="modal">
-        <div class="modal-content">
-            <span class="close" id="closeModalBtn">&times;</span>
-            <h2>Custom API Key (Abstract API)</h2>
-            <div class="input-container">
-                <input type="text" id="apiKeyInput" placeholder="Enter your Abstract API Key">
-                <button id="fetchWithApiKeyBtn" class="btn">Fetch IP Info with API Key</button>
-            </div>
-            <div id="apiPlainText" class="info"></div>
-            <button id="copyApiPlainBtn" class="btn" disabled>Copy Plain Text</button>
-            <button id="downloadApiPlainBtn" class="btn" disabled>Download Plain Text</button>
-
-            <div id="apiJsonText" class="info"></div>
-            <button id="copyApiJsonBtn" class="btn" disabled>Copy JSON</button>
-            <button id="downloadApiJsonBtn" class="btn" disabled>Download JSON</button>
-
-            <pre id="apiHeaders" class="info"></pre>
-            <button id="copyApiHeadersBtn" class="btn" disabled>Copy Headers</button>
-            <button id="downloadApiHeadersBtn" class="btn" disabled>Download Headers</button>
+            <button id="copyHeadersBtn" class="btn" disabled>Copy Headers</button>
+            <button id="downloadHeadersBtn" class="btn" disabled>Download Headers</button>
         </div>
     </div>
 
@@ -176,34 +116,27 @@
 
         async function fetchIPInfo() {
             try {
-                const response = await fetch('http://ip-api.com/json/');
+                const response = await fetch('https://ipapi.co/json/');
                 const data = await response.json();
                 jsonData = data;
-                responseHeaders = response.headers;
 
-                if (data.status === 'success') {
+                if (data) {
                     document.getElementById('plainText').innerText = `
-IP: ${data.query}
-Country: ${data.country}
-Country Code: ${data.countryCode}
+IP: ${data.ip}
+Country: ${data.country_name}
+Country Code: ${data.country_code}
 Region: ${data.region}
-Region Name: ${data.regionName}
+Region Code: ${data.region_code}
 City: ${data.city}
-District: ${data.district}
-Zip: ${data.zip}
-Latitude: ${data.lat}
-Longitude: ${data.lon}
+Postal: ${data.postal}
+Latitude: ${data.latitude}
+Longitude: ${data.longitude}
 Timezone: ${data.timezone}
-ISP: ${data.isp}
-Organization: ${data.org}
-ASN: ${data.as}
-ASN Name: ${data.asname}
-Mobile: ${data.mobile ? 'Yes' : 'No'}
-Proxy: ${data.proxy ? 'Yes' : 'No'}
-Hosting: ${data.hosting ? 'Yes' : 'No'}
+ASN: ${data.asn}
+ISP: ${data.org}
                     `;
                     document.getElementById('jsonText').innerText = JSON.stringify(data, null, 4);
-                    document.getElementById('headers').textContent = formatHeaders(responseHeaders);
+                    document.getElementById('headers').textContent = await fetchHeaders(response);
                     document.getElementById('copyPlainBtn').disabled = false;
                     document.getElementById('copyJsonBtn').disabled = false;
                     document.getElementById('copyHeadersBtn').disabled = false;
@@ -214,22 +147,22 @@ Hosting: ${data.hosting ? 'Yes' : 'No'}
                     document.getElementById('plainText').innerText = 'Failed to fetch IP information.';
                 }
             } catch (error) {
-                const errorData = {
-                    status: "fail",
-                    message: "SSL unavailable for this endpoint, order a key at https://members.ip-api.com/"
-                };
+                console.error('Error fetching IP info:', error);
                 document.getElementById('plainText').innerText = 'Failed to fetch IP information.';
-                document.getElementById('jsonText').innerText = JSON.stringify(errorData, null, 4);
+                document.getElementById('jsonText').innerText = JSON.stringify({
+                    status: "fail",
+                    message: error.message
+                }, null, 4);
                 document.getElementById('headers').textContent = 'Error fetching headers.';
             }
         }
 
-        function formatHeaders(headers) {
-            let formattedHeaders = '';
-            headers.forEach((value, name) => {
-                formattedHeaders += `${name}: ${value}\n`;
-            });
-            return formattedHeaders.trim();
+        async function fetchHeaders(response) {
+            let headers = '';
+            for (let [key, value] of response.headers) {
+                headers += `${key}: ${value}\n`;
+            }
+            return headers.trim();
         }
 
         function copyToClipboard(text, btn, originalText) {
@@ -262,9 +195,8 @@ Hosting: ${data.hosting ? 'Yes' : 'No'}
                 const response = await fetch(`https://ipgeolocation.abstractapi.com/v1/?api_key=${apiKey}`);
                 const data = await response.json();
                 jsonData = data;
-                responseHeaders = response.headers;
 
-                document.getElementById('apiPlainText').innerText = `
+                document.getElementById('plainText').innerText = `
 IP: ${data.ip_address}
 Country: ${data.country}
 Country Code: ${data.country_code}
@@ -277,15 +209,15 @@ Timezone: ${data.timezone.name}
 ISP: ${data.connection.isp}
 ASN: ${data.connection.asn}
                 `;
-                document.getElementById('apiJsonText').innerText = JSON.stringify(data, null, 4);
-                document.getElementById('apiHeaders').textContent = formatHeaders(responseHeaders);
+                document.getElementById('jsonText').innerText = JSON.stringify(data, null, 4);
+                document.getElementById('headers').textContent = await fetchHeaders(response);
 
-                document.getElementById('copyApiPlainBtn').disabled = false;
-                document.getElementById('copyApiJsonBtn').disabled = false;
-                document.getElementById('copyApiHeadersBtn').disabled = false;
-                document.getElementById('downloadApiPlainBtn').disabled = false;
-                document.getElementById('downloadApiJsonBtn').disabled = false;
-                document.getElementById('downloadApiHeadersBtn').disabled = false;
+                document.getElementById('copyPlainBtn').disabled = false;
+                document.getElementById('copyJsonBtn').disabled = false;
+                document.getElementById('copyHeadersBtn').disabled = false;
+                document.getElementById('downloadPlainBtn').disabled = false;
+                document.getElementById('downloadJsonBtn').disabled = false;
+                document.getElementById('downloadHeadersBtn').disabled = false;
             } catch (error) {
                 console.error('Error fetching IP info with API key:', error);
             }
@@ -296,7 +228,7 @@ ASN: ${data.connection.asn}
         });
 
         document.getElementById('copyJsonBtn').addEventListener('click', () => {
-            copyToClipboard(JSON.stringify(jsonData, null, 4), document.getElementById('copyJsonBtn'), 'Copy JSON');
+            copyToClipboard(document.getElementById('jsonText').innerText, document.getElementById('copyJsonBtn'), 'Copy JSON');
         });
 
         document.getElementById('copyHeadersBtn').addEventListener('click', () => {
@@ -323,44 +255,6 @@ ASN: ${data.connection.asn}
                 alert('Please enter a valid API key.');
             }
         });
-
-        document.getElementById('copyApiPlainBtn').addEventListener('click', () => {
-            copyToClipboard(document.getElementById('apiPlainText').innerText, document.getElementById('copyApiPlainBtn'), 'Copy Plain Text');
-        });
-
-        document.getElementById('copyApiJsonBtn').addEventListener('click', () => {
-            copyToClipboard(document.getElementById('apiJsonText').innerText, document.getElementById('copyApiJsonBtn'), 'Copy JSON');
-        });
-
-        document.getElementById('copyApiHeadersBtn').addEventListener('click', () => {
-            copyToClipboard(document.getElementById('apiHeaders').textContent, document.getElementById('copyApiHeadersBtn'), 'Copy Headers');
-        });
-
-        document.getElementById('downloadApiPlainBtn').addEventListener('click', () => {
-            downloadText('api_plain_text.txt', document.getElementById('apiPlainText').innerText);
-        });
-
-        document.getElementById('downloadApiJsonBtn').addEventListener('click', () => {
-            downloadText('api_data.json', document.getElementById('apiJsonText').innerText);
-        });
-
-        document.getElementById('downloadApiHeadersBtn').addEventListener('click', () => {
-            downloadText('api_headers.txt', document.getElementById('apiHeaders').textContent);
-        });
-
-        document.getElementById('openModalBtn').addEventListener('click', () => {
-            document.getElementById('apiModal').style.display = 'block';
-        });
-
-        document.getElementById('closeModalBtn').addEventListener('click', () => {
-            document.getElementById('apiModal').style.display = 'none';
-        });
-
-        window.onclick = function(event) {
-            if (event.target === document.getElementById('apiModal')) {
-                document.getElementById('apiModal').style.display = 'none';
-            }
-        };
 
         fetchIPInfo();
     </script>
