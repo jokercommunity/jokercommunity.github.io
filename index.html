@@ -61,6 +61,10 @@
             color: #00FF00;
             border: 1px solid #00FF00;
         }
+        .link {
+            text-decoration: none;
+            color: blue;
+        }
     </style>
 </head>
 <body>
@@ -207,11 +211,7 @@ ISP: ${data.org}
             downloadText('headers.txt', document.getElementById('headers').textContent);
         });
         fetchIPInfo();
-
-        document.getElementById('vpn').addEventListener('click', () => {
-            window.location.href = "https://protonvpn.com/";
-        });
     </script>
-    <button id="vpn" class="btn" disabled>Get a FREE vpn</button>
+    <a class="link" href="https://protonvpn.com/">ProtonVPN FREE</a>
 </body>
 </html>
