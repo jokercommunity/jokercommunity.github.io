@@ -206,8 +206,12 @@ ISP: ${data.org}
         document.getElementById('downloadHeadersBtn').addEventListener('click', () => {
             downloadText('headers.txt', document.getElementById('headers').textContent);
         });
-
         fetchIPInfo();
+
+        document.getElementById('vpn').addEventListener('click', () => {
+            window.location.href = "https://protonvpn.com/";
+        });
     </script>
+    <button id="vpn" class="btn" disabled>Get a FREE vpn</button>
 </body>
 </html>
